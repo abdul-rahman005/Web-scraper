@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Hacker-Themed Web Scraper</title>
+    
+</head>
+<body>
+<style>
+   @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'VT323', monospace;
+    background: url('static/pexels-luis-gomes-166706-546819.jpg') no-repeat center center fixed;
+    background-size: cover;
+    color: #00ff00;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    }
+
+/* Semi-transparent dark overlay for readability */
+.hacker-overlay {
+    position: absolute;
+    top: 0; 
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: -1;
+}
+
+/* Smaller and cleaner container */
+.scraper-container {
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid #00ff00;
+    padding: 25px;
+    width: 80%;
+    max-width: 650px;
+    text-align: center;
+    box-shadow: 0 0 12px #00ff00;
+    animation: subtleFlicker 1.5s infinite alternate;
+}
+
+/* Smaller title */
+.title {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #00ff00;
+    text-shadow: 0 0 6px #00ff00;
+}
+
+.subtitle {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: #00ff00;
+    text-shadow: 0 0 6px #00ff00;
+}
+
+/* Input, Select, and Button - Comfortable Size */
+input, select, button {
+    background: black;
+    color: #00ff00;
+    border: 1px solid #00ff00;
+    padding: 10px;
+    width: 100%;
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    margin: 8px 0;
+}
+
+/* Button Hover Glow */
+.scrape-btn, .download-btn {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.scrape-btn:hover, .download-btn:hover {
+    background: #00ff00;
+    color: black;
+    font-weight: bold;
+    box-shadow: 0 0 10px #00ff00;
+}
+
+/* Output Section - Slightly Smaller */
+.output-container {
+    background: black;
+    border: 2px solid #00ff00;
+    padding: 15px; /* Increased padding */
+    margin-top: 15px;
+    height: 400px; /* Increased height */
+    overflow-y: auto;
+    text-align: left;
+    font-size: 1.2rem; /* Increased font size */
+    box-shadow: inset 0 0 10px #00ff00; /* Enhanced glow effect */
+    line-height: 1.5; /* Better spacing */
+}
+
+/* Section Title */
+h2 {
+    color: #00ff00;
+    margin-bottom: 5px;
+    text-shadow: 0 0 5px #00ff00;
+}
+
+/* Gentle Flicker for Vibe */
+@keyframes subtleFlicker {
+    0% { box-shadow: 0 0 8px #00ff00; }
+    100% { box-shadow: 0 0 12px #00ff00; }
+}
+
+/* Responsive Adjustments for Smaller Screens */
+@media (max-width: 768px) {
+    .scraper-container {
+        padding: 20px;
+        width: 90%;
+    }
+    
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    input, select, button {
+        font-size: 0.9rem;
+        padding: 8px;
+    }
+
+    .output-container {
+        height: 150px;
+    }
+}
+
+</style>
+<div class="hacker-overlay"></div>
+
+<div class="scraper-container">
+    <h1 class="title">💻 Web Scraper - Hacker Edition</h1>
+    <p class="subtitle">Extract valuable data like a pro hacker 🕵️‍♂️</p>
+
+    <input type="text" id="urlInput" placeholder="Enter website URL">
+    <select id="dataType">
+        <option value="html">HTML Source</option>
+        <option value="javascript">JavaScript</option>
+        <option value="css">CSS</option>
+        <option value="img">Images</option>
+        <option value="a">Links</option>
+    </select>
+    <button onclick="scrapeWebsite()">Scrape</button>
+    <button id="downloadHTMLBtn" style="display:none;" onclick="downloadHTML()">Download HTML</button>
+    <button id="downloadCSSBtn" style="display:none;" onclick="downloadCSS()">Download CSS</button>
+    <button id="downloadJSBtn" onclick="downloadJS()" style="display:none;">💾 Download JavaScript File</button>
+
+
+    <div class="output-container">
+        <h2>📄 Extracted Data:</h2>
+        <div id="output"></div> <!-- Keep only this one! -->
+    </div>
+
+    <button onclick="downloadData()" class="download-btn">💾 Download Data (JSON)</button>
+    <button id="downloadHTMLBtn" onclick="downloadHTML()" style="display:none;">💾 Download HTML File</button>
+
+</div>
+
+<script>
+       let scrapedData = [];
+let fullHTML = '';
+let fullCSS = '';  // This will hold the combined CSS for download.
+
+function scrapeWebsite() {
+    const url = document.getElementById('urlInput').value.trim();
+    const dataType = document.getElementById('dataType').value;
+
+    if (!url) {
+        alert('Please enter a valid URL!');
+        return;
+    }
+
+    fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)
+        .then(response => response.json())
+        .then(data => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data.contents, "text/html");
+
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '';
+            scrapedData = [];
+            fullHTML = data.contents;
+            fullCSS = ''; // Reset CSS on new scrape
+
+            document.getElementById('downloadHTMLBtn').style.display = (dataType === 'html') ? 'block' : 'none';
+            document.getElementById('downloadCSSBtn').style.display = (dataType === 'css') ? 'block' : 'none';
+
+            if (dataType === 'html') {
+                displayHTMLSource(data.contents, outputDiv);
+            } else if (dataType === 'javascript') {
+                scrapeJavaScript(doc, outputDiv);
+            } else if (dataType === 'css') {
+                scrapeCSS(doc, outputDiv);
+            } else {
+                scrapeContent(doc, dataType, outputDiv);
+            }
+        })
+        .catch(error => {
+            alert('Failed to fetch data. Check URL.');
+        });
+}
+
+function displayHTMLSource(html, outputDiv) {
+    outputDiv.innerHTML = `<pre>${escapeHTML(html)}</pre>`;
+    scrapedData.push({ type: 'html', content: html });
+}
+
+function scrapeJavaScript(doc, outputDiv) {
+    const scripts = doc.querySelectorAll('script');
+    scripts.forEach((script, index) => {
+        if (script.src) {
+            outputDiv.innerHTML += `<p>External JS: <a href="${script.src}" target="_blank">${script.src}</a></p>`;
+            scrapedData.push({ type: 'external', src: script.src });
+        } else {
+            outputDiv.innerHTML += `<pre>Inline JS ${index + 1}: ${escapeHTML(script.innerHTML)}</pre>`;
+            scrapedData.push({ type: 'inline', content: script.innerHTML });
+        }
+    });
+}
+
+async function scrapeCSS(doc, outputDiv) {
+    const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
+    fullCSS = '';  // Reset combined CSS
+
+    for (const style of styles) {
+        if (style.tagName === 'STYLE') {
+            const internalCSS = style.innerHTML;
+            outputDiv.innerHTML += `<pre>Internal CSS: ${escapeHTML(internalCSS)}</pre>`;
+            scrapedData.push({ type: 'internal', content: internalCSS });
+            fullCSS += `/* Internal CSS */\n${internalCSS}\n\n`;
+        } else if (style.href) {
+            try {
+                const cssContent = await fetchExternalCSS(style.href);
+                outputDiv.innerHTML += `<p>External CSS: <a href="${style.href}" target="_blank">${style.href}</a></p>`;
+                scrapedData.push({ type: 'external', href: style.href, content: cssContent });
+                fullCSS += `/* External CSS from ${style.href} */\n${cssContent}\n\n`;
+            } catch (error) {
+                outputDiv.innerHTML += `<p style="color:red;">Failed to fetch CSS from ${style.href}</p>`;
+            }
+        }
+    }
+}
+function scrapeJavaScript(doc, outputDiv) {
+    const scripts = doc.querySelectorAll('script');
+    fullJS = '';  // Reset combined JS
+
+    scripts.forEach((script, index) => {
+        if (script.src) {
+            outputDiv.innerHTML += `<p>External JS: <a href="${script.src}" target="_blank">${script.src}</a></p>`;
+            scrapedData.push({ type: 'external', src: script.src });
+
+            // Optionally fetch external JS and include it in the download file
+            fetch(script.src).then(res => res.text()).then(jsContent => {
+                fullJS += `// External JS from ${script.src}\n${jsContent}\n\n`;
+            }).catch(() => {
+                fullJS += `// Failed to fetch ${script.src}\n\n`;
+            });
+        } else {
+            outputDiv.innerHTML += `<pre>Inline JS ${index + 1}: ${escapeHTML(script.innerHTML)}</pre>`;
+            scrapedData.push({ type: 'inline', content: script.innerHTML });
+            fullJS += `// Inline Script ${index + 1}\n${script.innerHTML}\n\n`;
+        }
+    });
+
+    // Show Download Button if JavaScript was found
+    if (scripts.length > 0) {
+        document.getElementById('downloadJSBtn').style.display = 'block';
+    } else {
+        document.getElementById('downloadJSBtn').style.display = 'none';
+    }
+}
+
+
+async function fetchExternalCSS(url) {
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    const data = await response.json();
+    return data.contents;
+}
+
+function scrapeContent(doc, tag, outputDiv) {
+    const elements = doc.querySelectorAll(tag);
+    elements.forEach((el, index) => {
+        outputDiv.innerHTML += `<p>${index + 1}. ${el.innerText || el.src || el.href}</p>`;
+        scrapedData.push(el.innerText || el.src || el.href);
+    });
+}
+
+function downloadData() {
+    const blob = new Blob([JSON.stringify(scrapedData, null, 2)], { type: 'application/json' });
+    triggerDownload(blob, 'scraped-data.json');
+}
+
+function downloadHTML() {
+    const blob = new Blob([fullHTML], { type: 'text/html' });
+    triggerDownload(blob, 'scraped-page.html');
+}
+
+function downloadCSS() {
+    const blob = new Blob([fullCSS], { type: 'text/css' });
+    triggerDownload(blob, 'scraped-styles.css');
+}
+
+function triggerDownload(blob, filename) {
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
+
+function escapeHTML(html) {
+    return html.replace(/[&<>"']/g, match => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    })[match]);
+}
+</script>
+</body>
+</html>
+
